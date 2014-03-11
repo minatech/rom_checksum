@@ -18,7 +18,10 @@ def checksum16(data):
             num = ord(c)
         else:
             isFirstBytye = True
-            num = num * 256 + ord(c)
+            if options.littleEndian == True:
+                num = num + ord(c) * 256
+            else:
+                num = num * 256 + ord(c)
             sum = sum + num
     return sum
 
@@ -27,6 +30,8 @@ parser.add_option("-w", "--width", type="int", dest="bits", default=8,
                   help="The number of bits of checksum (= 8 or 16)")
 parser.add_option("--binary", action="store_true", dest="binary",
                   help="Checksum is output in binary")
+parser.add_option("--little-endian", action="store_true", dest="littleEndian",
+                  help="16-bits sum calculation (-w16) and binary output (--binary) are handled as little endian")
 (options, args) = parser.parse_args()
 
 if len(args) != 1:
@@ -42,6 +47,9 @@ else:
     sum = checksum16(data)
 
 if options.binary == True:
-    sys.stdout.write("%c%c" % (chr(sum / 256), chr(sum % 256)))
+    if options.littleEndian == True:
+        sys.stdout.write("%c%c" % (chr(sum % 256), chr(sum / 256 % 256)))
+    else:
+        sys.stdout.write("%c%c" % (chr(sum / 256 % 256), chr(sum % 256)))
 else:
     print "%02X%02X" % (sum / 256, sum % 256),
